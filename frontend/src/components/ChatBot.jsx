@@ -159,11 +159,19 @@ const ChatBot = () => {
   }, [sessionKey]) // Re-run when session key changes
 
   const addBotMessage = (text) => {
-    setMessages(prev => [...prev, { type: 'bot', text, timestamp: new Date() }])
+    setMessages(prev => {
+      const last = prev[prev.length - 1]
+      if (last && last.type === 'bot' && last.text === text) return prev
+      return [...prev, { type: 'bot', text, timestamp: new Date() }]
+    })
   }
 
   const addUserMessage = (text) => {
-    setMessages(prev => [...prev, { type: 'user', text, timestamp: new Date() }])
+    setMessages(prev => {
+      const last = prev[prev.length - 1]
+      if (last && last.type === 'user' && last.text === text) return prev
+      return [...prev, { type: 'user', text, timestamp: new Date() }]
+    })
   }
 
   const extractAirportCode = (text) => {
@@ -516,9 +524,10 @@ const ChatBot = () => {
     e.preventDefault()
     if (!input.trim() || conversationState.loading) return
 
-    const userText = input.trim()
-    addUserMessage(userText)
-    setInput('')
+  const userText = input.trim()
+  // Don't add the user message here — specific handlers (e.g. handleFirstName)
+  // already add the user's message. Adding it here caused duplicates.
+  setInput('')
 
     // Process based on current step - fallback for text input
     switch (conversationState.step) {
@@ -666,6 +675,8 @@ const ChatBot = () => {
         break
 
       default:
+        // Unrecognized free text: echo the raw user message once, then bot fallback
+        addUserMessage(userText)
         addBotMessage("I'm ready to help you search for flights! Type 'start' to begin a new search.")
     }
   }
