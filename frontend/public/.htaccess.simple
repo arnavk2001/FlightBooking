@@ -1,0 +1,13 @@
+# Simplified .htaccess - Use this if the main one causes 500 errors
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /bookingbot/
+  
+  # Don't rewrite if file exists
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  
+  # Rewrite everything else to index.html
+  RewriteRule ^(.*)$ index.html [L]
+</IfModule>
+

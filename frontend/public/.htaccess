@@ -1,0 +1,37 @@
+# Flight Booking Bot - Apache Configuration
+# For deployment at /bookingbot/ subdirectory
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  
+  # Handle React Router - redirect all requests to index.html
+  # But exclude actual files and directories
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_URI} !^/bookingbot/assets/
+  RewriteRule ^(.*)$ /bookingbot/index.html [L]
+</IfModule>
+
+# Enable CORS if needed (usually handled by backend)
+<IfModule mod_headers.c>
+  Header set Access-Control-Allow-Origin "*"
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Cache static assets
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/jpg "access plus 1 year"
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/gif "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+</IfModule>

@@ -1,0 +1,46 @@
+name: Deploy to Azure Web App
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: bookingbot-app
+  AZURE_WEBAPP_PACKAGE_PATH: './backend'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Create deployment package
+      working-directory: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        # Create startup script if it doesn't exist
+        if [ ! -f startup.sh ]; then
+          echo '#!/bin/bash' > startup.sh
+          echo 'exec python -m uvicorn app:app --host 0.0.0.0 --port ${PORT:-8000} --workers 2' >> startup.sh
+          chmod +x startup.sh
+        fi
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+

@@ -1,0 +1,78 @@
+# Node / Vite / frontend
+node_modules/
+.env
+.env.local
+.env.*.local
+.env.production
+
+# Python
+venv/
+venv/*
+ENV/
+env/
+/.venv
+/.env
+*.pyc
+__pycache__/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# IDEs
+.vscode/
+.idea/
+
+# Secrets and credentials
+.aws/
+.aws-credentials
+*.pem
+*.key
+*.crt
+id_rsa
+id_rsa.pub
+secrets.yml
+secrets.yaml
+
+# dotenv files
+.env
+.env.*
+
+# Mac specific
+.Spotlight-V100
+.Trashes
+
+# Additional secrets / tooling
+.envrc
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+.terraform.lock.hcl
+.vault/
+.vault-password
+.gcloud/
+google-credentials.json
+service-account.json
+credentials.json
+.azure/
+.ssh/*.pem
+.ssh/*.key
+.netrc
+.npmrc
+.yarnrc
+.firebase/
+.firebaserc
+.history
+.cache/
+.pytest_cache/
+.coverage
+coverage/
+/.docker/
+docker-compose.override.yml
