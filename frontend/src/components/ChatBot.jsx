@@ -525,8 +525,7 @@ const ChatBot = () => {
     if (!input.trim() || conversationState.loading) return
 
     const userText = input.trim()
-    // Don't add the user message here — specific handlers (e.g. handleFirstName)
-    // already add the user's message. Adding it here caused duplicates.
+
     setInput('')
 
     // Process based on current step - fallback for text input
@@ -819,21 +818,29 @@ const ChatBot = () => {
   }
 
   const handleNewSearch = () => {
-    // Reset search-related state but keep user info
+    // Full reset: clear messages, inputs, selected flight, booking modals
     setMessages([])
     setInput('')
     setFlightData(null)
     setSelectedFlight(null)
     setShowSummary(false)
     setShowBookingForm(false)
-    // Reset booking form but keep user info in userInfo state
     setBookingForm({ customer_email: '', customer_name: '', customer_phone: '' })
 
-    // Check if user info exists (don't reset it)
-    const hasUserInfo = userInfo.first_name && userInfo.last_name && userInfo.email && userInfo.phone
+    // Clear persisted user info so we truly return to the initial onboarding state
+    try {
+      sessionStorage.removeItem('bookingbot_userInfo')
+      sessionStorage.removeItem('bookingbot_init_done')
+    } catch (e) {
+      console.error('Error clearing sessionStorage during new chat:', e)
+    }
 
+    // Reset in-memory user info
+    setUserInfo({ first_name: '', last_name: '', email: '', phone: '' })
+
+    // Reset conversation state to the initial onboarding step
     setConversationState({
-      step: hasUserInfo ? 'trip_type' : 'first_name',
+      step: 'first_name',
       origin: null,
       destination: null,
       departure_date: null,
@@ -852,12 +859,12 @@ const ChatBot = () => {
       showPriceCalendar: false,
       showFareRules: false,
       selectedFareRulesOffer: null,
-      showInput: !hasUserInfo
+      showInput: true
     })
-    // Force re-initialization by incrementing session key
+
+    // Force the component initialization effect to run again so it adds the initial greeting
     isInitializedRef.current = false
     setSessionKey(prev => prev + 1)
-    // Initial greeting will be added by useEffect when sessionKey changes (will check for user info)
   }
 
   return (
@@ -865,87 +872,80 @@ const ChatBot = () => {
       {/* Header */}
       <div className="chat-header">
         <div>
-          <div className="chat-title">✈️ Flight Booking Bot</div>
-          <div className="chat-subtitle">Find your perfect flight</div>
+          <h1 className="text-2xl font-bold">Flight Booking Bot</h1>
+          <p className="text-sm">Find your perfect flight</p>
         </div>
-        <button
-          onClick={handleNewSearch}
-          className="px-3 py-2 bg-white/10 rounded-md text-white hover:opacity-90"
-        >
-          New Search
-        </button>
+        <button onClick={handleNewSearch} className="new-search-button">New Search</button>
       </div>
 
-      {/* Messages */}
-      <div className="chat-messages">
+      <div className="chat-messages" style={{ maxHeight: 'calc(90vh - 200px)', overflowY: 'auto', overflowX: 'hidden' }}>
         {messages.map((msg, idx) => (
           <div key={idx} className={`message-row ${msg.type === 'user' ? 'user' : 'bot'}`}>
             <div className={`message-bubble ${msg.type === 'user' ? 'user' : 'bot'}`}>
               <div className="whitespace-pre-wrap break-words">{msg.text}</div>
               <div className="message-meta">{msg.timestamp.toLocaleTimeString()}</div>
             </div>
+
+            {/* Show widgets after bot messages based on current step */}
+            {msg.type === 'bot' && idx === messages.length - 1 && (
+              <div className="mt-2 ml-2 relative">
+                {conversationState.step === 'trip_type' && (
+                  <TripTypeSelector onSelect={handleTripTypeSelect} />
+                )}
+                {conversationState.step === 'origin' && (
+                  <div className="bg-gray-50 rounded-lg p-4 shadow-sm max-w-md">
+                    <AirportAutocomplete
+                      onSelect={handleOriginSelect}
+                      placeholder="Enter city or airport code"
+                      label="Departure Airport"
+                    />
+                  </div>
+                )}
+                {conversationState.step === 'destination' && (
+                  <div className="bg-gray-50 rounded-lg p-4 shadow-sm max-w-md">
+                    <AirportAutocomplete
+                      onSelect={handleDestinationSelect}
+                      placeholder="Enter city or airport code"
+                      label="Destination Airport"
+                    />
+                  </div>
+                )}
+                {(conversationState.step === 'departure_date' || conversationState.step === 'return_date') && (
+                  <div className="bg-gray-50 rounded-lg p-4 shadow-sm max-w-md relative" style={{ zIndex: 10 }}>
+                    <DatePicker
+                      value={conversationState.step === 'departure_date' ? conversationState.departure_date : conversationState.return_date}
+                      onChange={conversationState.step === 'departure_date' ? handleDateSelect : handleReturnDateSelect}
+                      placeholder={conversationState.step === 'departure_date' ? "Select departure date" : "Select return date"}
+                      flexible={true}
+                    />
+                  </div>
+                )}
+                {conversationState.step === 'passengers' && (
+                  <div className="bg-gray-50 rounded-lg p-4 shadow-sm max-w-md">
+                    <PassengerSelector
+                      adults={conversationState.adults}
+                      children={conversationState.children}
+                      infants={conversationState.infants}
+                      onAdultsChange={(adults) => setConversationState(prev => ({ ...prev, adults }))}
+                      onChildrenChange={(children) => setConversationState(prev => ({ ...prev, children }))}
+                      onInfantsChange={(infants) => setConversationState(prev => ({ ...prev, infants }))}
+                      showAges={false}
+                    />
+                    <button
+                      onClick={handlePassengerConfirm}
+                      className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
+                    >
+                      Confirm Passengers
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ))}
-
-        {/* Show widgets after bot messages based on current step */}
-        {messages.length > 0 && messages[messages.length - 1].type === 'bot' && (
-          <div className="mt-2 ml-2 relative">
-            {conversationState.step === 'trip_type' && (
-              <TripTypeSelector onSelect={handleTripTypeSelect} />
-            )}
-            {conversationState.step === 'origin' && (
-              <div className="bg-gray-50 rounded-lg p-4 shadow-sm max-w-md">
-                <AirportAutocomplete
-                  onSelect={handleOriginSelect}
-                  placeholder="Enter city or airport code"
-                  label="Departure Airport"
-                />
-              </div>
-            )}
-            {conversationState.step === 'destination' && (
-              <div className="bg-gray-50 rounded-lg p-4 shadow-sm max-w-md">
-                <AirportAutocomplete
-                  onSelect={handleDestinationSelect}
-                  placeholder="Enter city or airport code"
-                  label="Destination Airport"
-                />
-              </div>
-            )}
-            {(conversationState.step === 'departure_date' || conversationState.step === 'return_date') && (
-              <div className="bg-gray-50 rounded-lg p-4 shadow-sm max-w-md relative" style={{ zIndex: 10 }}>
-                <DatePicker
-                  value={conversationState.step === 'departure_date' ? conversationState.departure_date : conversationState.return_date}
-                  onChange={conversationState.step === 'departure_date' ? handleDateSelect : handleReturnDateSelect}
-                  placeholder={conversationState.step === 'departure_date' ? "Select departure date" : "Select return date"}
-                  flexible={true}
-                />
-              </div>
-            )}
-            {conversationState.step === 'passengers' && (
-              <div className="bg-gray-50 rounded-lg p-4 shadow-sm max-w-md">
-                <PassengerSelector
-                  adults={conversationState.adults}
-                  children={conversationState.children}
-                  infants={conversationState.infants}
-                  onAdultsChange={(adults) => setConversationState(prev => ({ ...prev, adults }))}
-                  onChildrenChange={(children) => setConversationState(prev => ({ ...prev, children }))}
-                  onInfantsChange={(infants) => setConversationState(prev => ({ ...prev, infants }))}
-                  showAges={false}
-                />
-                <button
-                  onClick={handlePassengerConfirm}
-                  className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
-                >
-                  Confirm Passengers
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
         {conversationState.loading && (
-          <div className="message-row bot">
-            <div className="message-bubble bot">
+          <div className="flex justify-start">
+            <div className="bg-gray-400 rounded-lg p-3 shadow-md border-2 border-black">
               <div className="flex space-x-2">
                 <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
                 <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
@@ -959,7 +959,7 @@ const ChatBot = () => {
 
       {/* Flight Results */}
       {flightData && (
-        <div className="p-4 bg-white/5 border-t overflow-y-auto" style={{ maxHeight: '40vh' }}>
+        <div className="p-4 bg-gray-300 border-t-2 border-black overflow-y-auto" style={{ maxHeight: '40vh' }}>
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-black">Flight Options</h2>
             <div className="flex space-x-2">
@@ -1146,6 +1146,7 @@ const ChatBot = () => {
             type="submit"
             disabled={conversationState.loading || !input.trim()}
             className="send-button"
+            aria-label="Send message"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
           </button>

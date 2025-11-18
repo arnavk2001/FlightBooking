@@ -99,6 +99,76 @@ body {
   border-top-right-radius: 6px;
 }
 
+/* Slightly narrower user bubbles like in screenshot */
+.message-row.user .message-bubble.user {
+  max-width: 46%;
+}
+
+/* Timestamp styling under each bubble */
+.message-meta {
+  font-size: 0.72rem;
+  opacity: 0.6;
+  margin-top: 6px;
+  color: #6b7280;
+}
+
+.message-row.user .message-meta {
+  text-align: right;
+}
+
+/* New Search button in header */
+.new-search-button {
+  /* Slightly darker-to-lighter duo-tone for depth */
+  background: linear-gradient(90deg, #0a58d8 0%, #0b7bff 60%);
+  color: #ffffff;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 26px rgba(11, 92, 210, 0.16), inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
+}
+
+.new-search-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(11, 92, 210, 0.18), inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.new-search-button:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 18px rgba(11, 92, 210, 0.12);
+}
+
+.new-search-button:focus {
+  outline: 3px solid rgba(11, 123, 255, 0.12);
+  outline-offset: 2px;
+}
+
+/* Input placeholder + send button tweaks */
+.chat-input::placeholder {
+  color: #94a3b8;
+}
+
+.send-button svg {
+  stroke: white;
+}
+
+/* Make chat header contents vertically centered and slightly taller */
+.chat-header .chat-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+/* Make the chat card look a bit more like screenshot (brighter interior) */
+.chat-container {
+  background: #ffffff;
+  color: #0f1724;
+}
+
 .message-meta {
   font-size: 0.72rem;
   opacity: 0.6;
@@ -106,7 +176,7 @@ body {
 }
 
 .chat-input-area {
-  padding: 14px 16px;
+  padding: 14px 18px;
   border-top: 1px solid rgba(15, 23, 36, 0.06);
   background: #ffffff;
   display: flex;
@@ -116,10 +186,10 @@ body {
 
 .chat-input {
   flex: 1 1 auto;
-  padding: 12px 14px;
+  padding: 12px 16px;
   border-radius: 999px;
   border: 1px solid rgba(15, 23, 36, 0.08);
-  background: #f7fafc;
+  background: #ffffff;
   color: #0f1724;
   outline: none;
   font-size: 0.95rem;
@@ -132,7 +202,9 @@ body {
   background: linear-gradient(90deg, #0b6cff, #0066cc 60%);
   color: #fff;
   border-radius: 999px;
-  padding: 10px 14px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   border: none;
   cursor: pointer;
   box-shadow: 0 6px 18px rgba(11, 108, 255, 0.12);
